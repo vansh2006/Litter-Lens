@@ -1,5 +1,6 @@
 # import the necessary packages
 from imutils.video import VideoStream
+from awskinesisvideostreams import KinesisVideoStream
 from dotenv import load_dotenv
 from pymongo import MongoClient
 import datetime
@@ -12,28 +13,25 @@ import os
 """AWS Content Begins Here"""
 
 # Now, we'll setup the AWS Kinesis Video Stream
-load_dotenv()
-stream_name = 'litter-stream'
 # Initialize the video source (webcam)
 video_source = None
 min_area = 1000
 
-# Take the camera and turn it on
-vs = VideoStream(src=1).start()
-time.sleep(2.0)
+# AWS Kinesis Video Stream setup
+stream_name = "your_kinesis_stream_name"
+region_name = "your_aws_region"
+aws_access_key_id = "your_aws_access_key_id"
+aws_secret_access_key = "your_aws_secret_access_key"
 
-# Initialize the first frame in the video stream - used to compare for motion
-# Camera must start on white frame that has white background so that it compares to blank state to detect objects
-first_frame = None
-#AWS Credentials
-aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
-aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
-aws_region = os.getenv('AWS_REGION')
+# MongoDB Atlas setup
+mongo_client = MongoClient('mongodb+srv://kershanarulneswaran:bitterbens@littercluster.fg8lf.mongodb.net/?retryWrites=true&w=majority&appName=LitterCluster')
+db = mongo_client['litterdb']
+collection = db['streams']
 
-#Print to make sure
+# Print to make sure
 print(f"AWS_ACCESS_KEY_ID: {aws_access_key_id}")
 print(f"AWS_SECRET_ACCESS_KEY: {aws_secret_access_key}")
-print(f"AWS_REGION: {aws_region}")
+print(f"AWS_REGION: {region_name}")
 
 # Create a Kinesis Video Client
 try:
@@ -41,56 +39,36 @@ try:
         'kinesisvideo',
         aws_access_key_id=aws_access_key_id,
         aws_secret_access_key=aws_secret_access_key,
-        region_name=aws_region
+        region_name=region_name
     )
     # Optionally, describe the stream to check the connection
     response = kinesis.describe_stream(StreamName=stream_name)
     print(f"Connected to Kinesis Video Stream: {response}")
 except Exception as e:
     print(f"Error connecting to AWS Kinesis Video Stream: {e}")
+    exit(1)
 
-#Get the Kinesis Data Endpoint
-endpoint = kinesis.get_data_endpoint(
-    APIName='GET_HLS_STREAMING_SESSION_URL',
-    StreamName=stream_name
-)['DataEndpoint']
-#Print output
-print(f'Kinesis Data Endpoint: {endpoint}')
+# Get the endpoint for PUT_MEDIA
+try:
+    response = kinesis.get_data_endpoint(
+        StreamName=stream_name,
+        APIName='PUT_MEDIA'
+    )
+    endpoint = response['DataEndpoint']
+    print(f"Data endpoint: {endpoint}")
+except Exception as e:
+    print(f"Error getting data endpoint: {e}")
+    exit(1)
 
-#Get the Stream URL for MongoDB document
-kvam = boto3.client('kinesis-video-archived-media', endpoint_url=endpoint, region_name=aws_region)
-# Get the HLS Stream URL from the GetMedia API
-response = kvam.get_hls_streaming_session_url(
-    StreamName=stream_name,
-    PlaybackMode='ON_DEMAND',
-    HLSFragmentSelector={
-        'FragmentSelectorType': 'SERVER_TIMESTAMP',
-        'TimestampRange': {
-            'StartTimestamp': datetime.datetime.now() - datetime.timedelta(minutes=5),
-            'EndTimestamp': datetime.datetime.now()
-        }
-    }
-)
+# Initialize Kinesis Video Stream
+try:
+    kinesis_video = KinesisVideoStream(endpoint, stream_name, aws_access_key_id, aws_secret_access_key)
+except Exception as e:
+    print(f"Error initializing Kinesis Video Stream: {e}")
+    exit(1)
 
-
-
-# Print the entire response for debugging
-print(f'Response from get_hls_streaming_session_url: {response}')
-
-# Extract the HLS Stream URL
-url = response.get('HLSStreamingSessionURL')
-if url:
-    print(f'HLS Stream URL: {url}')
-    video = cv2.VideoCapture(url)
-else:
-    print('HLSStreamingSessionURL not found in the response or no fragments found in the stream for the streaming request.')
-
-#Store URL into MongoDB Atlas Database
-client = MongoClient('mongodb+srv://kershanarulneswaran:bitterbens@littercluster.fg8lf.mongodb.net/?retryWrites=true&w=majority&appName=LitterCluster')
-db = client['litterdb']
-collection = db['streams']
-
-#Document, id is auto generated
+# Store URL into MongoDB Atlas Database
+url = f"https://{endpoint}/{stream_name}"
 document = {
     'name': 'TrashTalk1',
     'location': 'University of Toronto',
@@ -98,8 +76,18 @@ document = {
 }
 
 # Add to MongoDB
-collection.insert_one(document)
-print('URL added to MongoDB')
+try:
+    collection.insert_one(document)
+    print('URL added to MongoDB')
+except Exception as e:
+    print(f"Error adding URL to MongoDB: {e}")
+
+# Take the camera and turn it on
+vs = VideoStream(src=1).start()
+time.sleep(2.0)
+
+# Initialize the first frame in the video stream - used to compare for motion
+first_frame = None
 
 
 """ Up till here is essentially just server streaming compatibility through AWS"""
@@ -108,77 +96,72 @@ print('URL added to MongoDB')
 
 # Now OBJECT DETECTION
 
-
-
 # Loop over the frames of the video
 while True:
-	# Initialize the "first frame" which is intented to be a blank frame
-	# There must be no objects right now
-	frame = vs.read()
-	if video_source is not None:
-		frame = frame[1] # Extract a frame from video capture
-	
-	text = "No trash"
+    # Initialize the "first frame" which is intended to be a blank frame
+    # There must be no objects right now
+    frame = vs.read()
+    if video_source is not None:
+        frame = frame[1]  # Extract a frame from video capture
 
-	# If no camera available still, quit/break
-	if frame is None:
-		break
+    text = "No trash"
 
-	# Pre process the images
-	# Resize the frame, convert it to grayscale, and blur it
-	frame = imutils.resize(frame, width=500)
-	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-	gray = cv2.GaussianBlur(gray, (21, 21), 0)
+    # If no camera available still, quit/break
+    if frame is None:
+        break
 
-	# If the first frame is None, initialize it
-	if first_frame is None:
-		first_frame = gray
-		continue
+    # Pre-process the images
+    # Resize the frame, convert it to grayscale, and blur it
+    frame = imutils.resize(frame, width=500)
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    gray = cv2.GaussianBlur(gray, (21, 21), 0)
 
-	# Compute absolute difference between first and current frame
-	frame_delta = cv2.absdiff(first_frame, gray)
+    # If the first frame is None, initialize it
+    if first_frame is None:
+        first_frame = gray
+        continue
 
-	# VERY IMPORTANT, DON'T UNDERSTAND BUT DON'T TOUCH
-	thresh = cv2.threshold(frame_delta, 55, 180, cv2.THRESH_BINARY)[1]
+    # Compute absolute difference between first and current frame
+    frame_delta = cv2.absdiff(first_frame, gray)
 
-	# Dilate the "threshold" to fill in holes, find contours on the images
-	thresh = cv2.dilate(thresh, None, iterations=4)
-	cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-	cnts = imutils.grab_contours(cnts)
+    # VERY IMPORTANT, DON'T UNDERSTAND BUT DON'T TOUCH
+    thresh = cv2.threshold(frame_delta, 55, 180, cv2.THRESH_BINARY)[1]
 
+    # Dilate the "threshold" to fill in holes, find contours on the images
+    thresh = cv2.dilate(thresh, None, iterations=4)
+    cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cnts = imutils.grab_contours(cnts)
 
-	# Loop over the contours
-	for c in cnts:
+    # Loop over the contours
+    for c in cnts:
+        # If contour is too small, ignore
+        if cv2.contourArea(c) < min_area:
+            continue
 
-		# If contour is too small, ignore
-		if cv2.contourArea(c) < min_area:
-			continue
+        # Compute the bounding box, draw it, and update the text
+        (x, y, w, h) = cv2.boundingRect(c)
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        text = "Trash in Frame"
 
-		# Compute the bounding box, draw it, and update the text
-		(x, y, w, h) = cv2.boundingRect(c)
+    # Draw the text and timestamp on the frame
+    cv2.putText(frame, "Litter Status: {}".format(text), (10, 20),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+    cv2.putText(frame, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"),
+                (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
 
-		cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+    cv2.imshow("Security Feed", frame)
+    cv2.imshow("Thresh", thresh)
+    cv2.imshow("Frame Delta", frame_delta)
 
-		text = "Trash in Frame"
+    # Send frame to AWS Kinesis Video Stream
+    try:
+        kinesis_video.put_frame(frame)
+    except Exception as e:
+        print(f"Error sending frame to Kinesis Video Stream: {e}")
 
-
-
-	# Draw the text and timestamp on the frame
-	cv2.putText(frame, "Litter Status: {}".format(text), (10, 20),
-		cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-	
-	cv2.putText(frame, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"),
-		(10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
-	
-	# Show the frame and record if the user presses a key
-	cv2.imshow("Security Feed", frame)
-	cv2.imshow("Thresh", thresh)
-	cv2.imshow("Frame Delta", frame_delta)
-
-	# If the `q` key is pressed, break from the loop
-	key = cv2.waitKey(1) & 0xFF
-	if key == ord("q"):
-		break
+    key = cv2.waitKey(1) & 0xFF
+    if key == ord("q"):
+        break
 
 # Cleanup the camera and close any open windows
 if video_source is None:
