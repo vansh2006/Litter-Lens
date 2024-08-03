@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const cors = require('cors');
 const port = process.env.PORT || 8000;
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
@@ -68,8 +69,6 @@ app.get('/', (req, res) => {
 app.get('/getGarbageState', (req, res) => {
   res.send(garbageState);
 });
-
-
 
 app.get('/setFull', (req, res) => {
     try{
