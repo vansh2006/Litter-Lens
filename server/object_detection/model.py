@@ -8,17 +8,15 @@ import cv2
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-v", "--video", help="path to the video file")
-ap.add_argument("-a", "--min-area", type=int, default=500, help="minimum area size")
+ap.add_argument("-a", "--min-area", type=int, default=1000, help="minimum area size") #doubled size
 args = vars(ap.parse_args())
 # if the video argument is None, then we are reading from webcam
-if args.get("video", None) is None:
-	vs = VideoStream(src=2).start()
-	time.sleep(2.0)
-# otherwise, we are reading from a video file
-else:
-	vs = cv2.VideoCapture(1)
+vs = VideoStream(src=2).start() if args.get("video", None) is None else cv2.VideoCapture(args["video"])
+time.sleep(2.0)
+
 # initialize the first frame in the video stream
 firstFrame = None
+frame_count = 0
 # loop over the frames of the video
 while True:
 	# grab the current frame and initialize the occupied/unoccupied
@@ -35,13 +33,16 @@ while True:
 	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 	gray = cv2.GaussianBlur(gray, (21, 21), 0)
 	# if the first frame is None, initialize it
-	if firstFrame is None:
-		firstFrame = gray
+	if firstFrame is None or frame_count % 30 == 0: #update background frame periodically
+		firstFrame = gray.copy().astype("float")
 		continue
+	frame_count += 1
 	# compute the absolute difference between the current frame and
 	# first frame
 	frameDelta = cv2.absdiff(firstFrame, gray)
-	thresh = cv2.threshold(frameDelta, 25, 255, cv2.THRESH_BINARY)[1]
+	thresh = cv2.adaptiveThreshold(frameDelta, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2) #replaced binary thresholding
+	thresh = cv2.dilate(thresh, None, iterations=2) #dilate
+
 	# dilate the thresholded image to fill in holes, then find contours
 	# on thresholded image
 	thresh = cv2.dilate(thresh, None, iterations=2)
