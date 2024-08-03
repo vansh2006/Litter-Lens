@@ -6,17 +6,20 @@ import imutils
 import time
 import cv2
 # construct the argument parser and parse the arguments
-ap = argparse.ArgumentParser()
-ap.add_argument("-v", "--video", help="path to the video file")
-ap.add_argument("-a", "--min-area", type=int, default=500, help="minimum area size")
-args = vars(ap.parse_args())
+# ap = argparse.ArgumentParser()
+# ap.add_argument("-v", "--video", help="path to the video file")
+# ap.add_argument("-a", "--min-area", type=int, default=500, help="minimum area size")
+# args = vars(ap.parse_args())
 # if the video argument is None, then we are reading from webcam
-if args.get("video", None) is None:
-	vs = VideoStream(src=0).start()
-	time.sleep(2.0)
+video_source = None
+min_area = 500
+
+#if video_source is None:
+vs = VideoStream(src=0).start()
+time.sleep(2.0)
 # otherwise, we are reading from a video file
-else:
-	vs = cv2.VideoCapture(args["video"])
+#else:
+	#vs = cv2.VideoCapture(video_source)
 # initialize the first frame in the video stream
 firstFrame = None
 # loop over the frames of the video
@@ -24,7 +27,9 @@ while True:
 	# grab the current frame and initialize the occupied/unoccupied
 	# text
 	frame = vs.read()
-	frame = frame if args.get("video", None) is None else frame[1]
+	if video_source is not None:
+		frame = frame[1] #extract from video capture
+	
 	text = "Unoccupied"
 	# if the frame could not be grabbed, then we have reached the end
 	# of the video
@@ -51,7 +56,7 @@ while True:
 	# loop over the contours
 	for c in cnts:
 		# if the contour is too small, ignore it
-		if cv2.contourArea(c) < args["min_area"]:
+		if cv2.contourArea(c) < min_area:
 			continue
 		# compute the bounding box for the contour, draw it on the frame,
 		# and update the text
@@ -72,5 +77,8 @@ while True:
 	if key == ord("q"):
 		break
 # cleanup the camera and close any open windows
-vs.stop() if args.get("video", None) is None else vs.release()
+if video_source is None:
+	vs.stop()
+else:
+	vs.release()
 cv2.destroyAllWindows()
