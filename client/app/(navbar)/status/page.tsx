@@ -1,22 +1,19 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect} from 'react';
 import styles from '../style.module.css';
+import fetchGarbageState from '@/app/helper';
 
 export default function Status() {
   const [status, setStatus] = useState<string | null>(null);
 
+  async function fetchStatus() {
+    const data = await fetchGarbageState();
+    console.log(data.status); 
+    setStatus(data.status);
+  }
+
   useEffect(() => {
-    const fetchStatus = async () => {
-      const response = await fetch('/api/status');
-      const data = await response.json();
-      setStatus(data.status);
-    };
-
-    // Fetch the status every second
-    const intervalId = setInterval(fetchStatus, 1000);
-
-    // Cleanup interval on component unmount
-    return () => clearInterval(intervalId);
+    fetchStatus();
   }, []);
 
   return (
