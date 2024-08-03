@@ -7,7 +7,7 @@ import cv2
 
 # if the video argument is None, then we are reading from webcam
 video_source = None
-min_area = 500
+min_area = 1000
 
 #if video_source is None:
 vs = VideoStream(src=0).start()
