@@ -9,17 +9,7 @@ import cv2
 import boto3
 import os
 
-# Initialize the video source (webcam)
-video_source = None
-min_area = 1000
-
-# Take the camera and turn it on
-vs = VideoStream(src=1).start()
-time.sleep(2.0)
-
-# Initialize the first frame in the video stream - used to compare for motion
-# Camera must start on white frame that has white background so that it compares to blank state to detect objects
-first_frame = None
+"""AWS Content Begins Here"""
 
 # Now, we'll setup the AWS Kinesis Video Stream
 load_dotenv()
@@ -74,7 +64,21 @@ print('URL added to MongoDB')
 
 """ Up till here is essentially just server streaming compatibility through AWS"""
 
+"""AWS Content Concludes Here"""
+
 # Now OBJECT DETECTION
+
+# Initialize the video source (webcam)
+video_source = None
+min_area = 1000
+
+# Take the camera and turn it on
+vs = VideoStream(src=1).start()
+time.sleep(2.0)
+
+# Initialize the first frame in the video stream - used to compare for motion
+# Camera must start on white frame that has white background so that it compares to blank state to detect objects
+first_frame = None
 
 # Loop over the frames of the video
 while True:
@@ -126,6 +130,7 @@ while True:
 		cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
 		text = "Trash in Frame"
+
 
 
 	# Draw the text and timestamp on the frame
