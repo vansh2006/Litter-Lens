@@ -5,9 +5,7 @@ from imutils.video import VideoStream
 import time
 import cv2
 import os
-
-
-
+import requests 
 
 # Now, we'll setup the AWS Kinesis Video Stream
 # Initialize the video source (webcam)
@@ -21,16 +19,6 @@ time.sleep(2.0)
 
 # Initialize the first frame in the video stream - used to compare for motion
 first_frame = None
-
-
-""" Up till here is essentially just server streaming compatibility through AWS"""
-
-"""AWS Content Concludes Here"""
-
-# Now OBJECT DETECTIONg
-
-# Loop over the frames of the video
-
 
 while True:
     # Initialize the "first frame" which is intended to be a blank frame
