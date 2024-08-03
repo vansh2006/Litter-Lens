@@ -42,8 +42,12 @@ const fs = require('fs');
 //set region to us-east-1
 AWS.config.update({ region: 'us-east-1' });
 
-// S3 bucket 
-const s3 = new AWS.S3{
+// S3 bucket
+const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-}
+});
+
+// Connect bucket to MongoDB
+const bucket = process.env.BUCKET_NAME;
+const key = process.env.KEY_NAME;
