@@ -18,10 +18,7 @@ video_source = None
 min_area = 1000
 
 # AWS Kinesis Video Stream setup
-stream_name = "your_kinesis_stream_name"
-region_name = "your_aws_region"
-aws_access_key_id = "your_aws_access_key_id"
-aws_secret_access_key = "your_aws_secret_access_key"
+stream_name = "litter-stream"
 
 # MongoDB Atlas setup
 mongo_client = MongoClient('mongodb+srv://kershanarulneswaran:bitterbens@littercluster.fg8lf.mongodb.net/?retryWrites=true&w=majority&appName=LitterCluster')
@@ -29,9 +26,12 @@ db = mongo_client['litterdb']
 collection = db['streams']
 
 # Print to make sure
+aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
+aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+aws_region = os.getenv('AWS_REGION')
 print(f"AWS_ACCESS_KEY_ID: {aws_access_key_id}")
 print(f"AWS_SECRET_ACCESS_KEY: {aws_secret_access_key}")
-print(f"AWS_REGION: {region_name}")
+print(f"AWS_REGION: {aws_region}")
 
 # Create a Kinesis Video Client
 try:
@@ -39,7 +39,7 @@ try:
         'kinesisvideo',
         aws_access_key_id=aws_access_key_id,
         aws_secret_access_key=aws_secret_access_key,
-        region_name=region_name
+        region_name=aws_region
     )
     # Optionally, describe the stream to check the connection
     response = kinesis.describe_stream(StreamName=stream_name)
@@ -59,14 +59,19 @@ try:
 except Exception as e:
     print(f"Error getting data endpoint: {e}")
     exit(1)
-
-# Initialize Kinesis Video Stream
+    
+# Create a Kinesis Video Stream
 try:
-    kinesis_video = KinesisVideoStream(endpoint, stream_name, aws_access_key_id, aws_secret_access_key)
+	kinesis_video = kinesis.create_stream(
+		StreamName=stream_name,
+		MediaType='video/h264',
+		DataRetentionInHours=2
+	)
+	print(f"Kinesis Video Stream created: {kinesis_video}")
 except Exception as e:
-    print(f"Error initializing Kinesis Video Stream: {e}")
-    exit(1)
-
+	print(f"Error creating Kinesis Video Stream: {e}")
+	exit(1)
+    
 # Store URL into MongoDB Atlas Database
 url = f"https://{endpoint}/{stream_name}"
 document = {
@@ -155,7 +160,7 @@ while True:
 
     # Send frame to AWS Kinesis Video Stream
     try:
-        kinesis_video.put_frame(frame)
+        
     except Exception as e:
         print(f"Error sending frame to Kinesis Video Stream: {e}")
 
