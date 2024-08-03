@@ -36,14 +36,34 @@ endpoint = kinesis.get_data_endpoint(
     APIName='GET_HLS_STREAMING_SESSION_URL',
     StreamName=stream_name
 )['DataEndpoint']
+#Print output
+print(f'Kinesis Data Endpoint: {endpoint}')
 
 #Get the Stream URL for MongoDB document
-kvam = boto3.client('kinesis-video-archived-media', endpoint_url=endpoint)
+kvam = boto3.client('kinesis-video-archived-media', endpoint_url=endpoint, region_name=aws_region)
 # Get the HLS Stream URL from the GetMedia API
-url = kvam.get_hls_streaming_session_url(
+response = kvam.get_hls_streaming_session_url(
     StreamName=stream_name,
-    PlaybackMode='LIVE'
-)['HLSStreamingSessionURL']
+    PlaybackMode='ON_DEMAND',
+    HLSFragmentSelector={
+        'FragmentSelectorType': 'SERVER_TIMESTAMP',
+        'TimestampRange': {
+            'StartTimestamp': datetime.now() - timedelta(minutes=5),
+            'EndTimestamp': datetime.now()
+        }
+    }
+)
+
+# Print the entire response for debugging
+print(f'Response from get_hls_streaming_session_url: {response}')
+
+# Extract the HLS Stream URL
+url = response.get('HLSStreamingSessionURL')
+if url:
+    print(f'HLS Stream URL: {url}')
+    video = cv2.VideoCapture(url)
+else:
+    print('HLSStreamingSessionURL not found in the response or no fragments found in the stream for the streaming request.')
 
 #Store URL into MongoDB Atlas Database
 client = MongoClient('mongodb+srv://kershanarulneswaran:bitterbens@littercluster.fg8lf.mongodb.net/?retryWrites=true&w=majority&appName=LitterCluster')
