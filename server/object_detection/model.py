@@ -14,7 +14,17 @@ import os
 # Now, we'll setup the AWS Kinesis Video Stream
 load_dotenv()
 stream_name = 'litter-stream'
+# Initialize the video source (webcam)
+video_source = None
+min_area = 1000
 
+# Take the camera and turn it on
+vs = VideoStream(src=1).start()
+time.sleep(2.0)
+
+# Initialize the first frame in the video stream - used to compare for motion
+# Camera must start on white frame that has white background so that it compares to blank state to detect objects
+first_frame = None
 #AWS Credentials
 aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
 aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
@@ -26,10 +36,18 @@ print(f"AWS_SECRET_ACCESS_KEY: {aws_secret_access_key}")
 print(f"AWS_REGION: {aws_region}")
 
 # Create a Kinesis Video Client
-kinesis = boto3.client('kinesisvideo',
-    aws_access_key_id=aws_access_key_id,
-    aws_secret_access_key=aws_secret_access_key,
-    region_name=aws_region)
+try:
+    kinesis = boto3.client(
+        'kinesisvideo',
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key=aws_secret_access_key,
+        region_name=aws_region
+    )
+    # Optionally, describe the stream to check the connection
+    response = kinesis.describe_stream(StreamName=stream_name)
+    print(f"Connected to Kinesis Video Stream: {response}")
+except Exception as e:
+    print(f"Error connecting to AWS Kinesis Video Stream: {e}")
 
 #Get the Kinesis Data Endpoint
 endpoint = kinesis.get_data_endpoint(
@@ -48,11 +66,13 @@ response = kvam.get_hls_streaming_session_url(
     HLSFragmentSelector={
         'FragmentSelectorType': 'SERVER_TIMESTAMP',
         'TimestampRange': {
-            'StartTimestamp': datetime.now() - timedelta(minutes=5),
-            'EndTimestamp': datetime.now()
+            'StartTimestamp': datetime.datetime.now() - datetime.timedelta(minutes=5),
+            'EndTimestamp': datetime.datetime.now()
         }
     }
 )
+
+
 
 # Print the entire response for debugging
 print(f'Response from get_hls_streaming_session_url: {response}')
@@ -88,17 +108,7 @@ print('URL added to MongoDB')
 
 # Now OBJECT DETECTION
 
-# Initialize the video source (webcam)
-video_source = None
-min_area = 1000
 
-# Take the camera and turn it on
-vs = VideoStream(src=1).start()
-time.sleep(2.0)
-
-# Initialize the first frame in the video stream - used to compare for motion
-# Camera must start on white frame that has white background so that it compares to blank state to detect objects
-first_frame = None
 
 # Loop over the frames of the video
 while True:
