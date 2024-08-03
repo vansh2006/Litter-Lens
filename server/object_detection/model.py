@@ -1,79 +1,76 @@
+# import the necessary packages
+from imutils.video import VideoStream
+import argparse
+import datetime
+import imutils
+import time
 import cv2
-import numpy as np
-import tensorrt as trt
-import pycuda.driver as cuda
-import pycuda.autoinit
-import simpleaudio as sa
-
-# camera stuff
-
-class TensorRTModel:
-    def __init__(self, engine_path):
-        self.engine_path = engine_path
-        self.logger = trt.Logger(trt.Logger.ERROR)
-        self.runtime = trt.Runtime(self.logger)
-
-        with open(engine_path, "rb") as f: #load TensorRT engine
-            self.engine = self.runtime.deserialize_cuda_engine(f.read())
-
-        self.context = self.engine.create_execution_context()
-        #size and shapes of input and output
-        self.input_shape = self.engine.get_binding_shape(0)
-        self.output_shape = self.engine.get_binding_shape(1)
-        self.input_size = trt.volume(self.input_shape) * self.engine.max_batch_size
-        self.output_size = trt.volume(self.output_shape) * self.engine.max_batch_size
-
-        self.d_input = cuda.mem_alloc(self.input_size * 4)
-        self.d_output = cuda.mem_alloc(self.output_size * 4)
-
-        self.stream = cuda.Stream()
-    
-    def predict(self, input_data):
-        input_data = input_data.ravel()
-        cuda.memcpy_htod_async(self.d_input, input_data, self.stream)
-
-        self.context.execute_async_v2 ( #run inference
-            bindings=[int(self.d_input), int(self.d_output)],
-            stream_handle=self.stream.handle)
-        
-        output = np.empty(self.output_shape, dtype=np.float32)
-        cuda.memcpy_dtoh_async(output, self.d_output, self.stream)
-
-        self.stream.synchronize()
-
-        return output
-    
-model = TensorRTModel(r"C:\Users\matia\Documents\LitterLens\server\object_detection\taco.engine")
-
-cap = cv2.VideoCapture(2, cv2.CAP_DSHOW)
-cap.set(3, 640)
-cap.set(4, 480)
-
+# construct the argument parser and parse the arguments
+ap = argparse.ArgumentParser()
+ap.add_argument("-v", "--video", help="path to the video file")
+ap.add_argument("-a", "--min-area", type=int, default=500, help="minimum area size")
+args = vars(ap.parse_args())
+# if the video argument is None, then we are reading from webcam
+if args.get("video", None) is None:
+	vs = VideoStream(src=0).start()
+	time.sleep(2.0)
+# otherwise, we are reading from a video file
+else:
+	vs = cv2.VideoCapture(args["video"])
+# initialize the first frame in the video stream
+firstFrame = None
+# loop over the frames of the video
 while True:
-    print("TEST!")
-    success, img = cap.read()
-    if not success:
-        break
-    #preprocess image
-    input_image = cv2.resize(img, (model.input_shape[2], model.input_shape[3]))
-    input_image = input_image.astype(np.float32)
-    input_image = np.transpose(input_image, (2, 0, 1))  
-    input_image = np.expand_dims(input_image, axis=0)
-    #run inference on preprocessed image
-    outputs = model.predict(input_image)
-
-    boxes = outputs[0][:, 1:5]
-    scores = outputs[0][:, 5:]
-
-    for i in range(boxes.shape[0]):
-        if scores[i] > 0.5: #confidence threshold
-            box = boxes[i] * np.array([img.shape[1], img.shape[0], img.shape[1], img.shape[0]]) #scale bounding boxes
-            (x, y, w, h) = box.astype("int") #convert to int
-            cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2) #draw rectangle
-
-    cv2.imshow("Image", img)
-    if cv2.waitKey(1) & 0xFF == ord('q'): #q key to exit the loop
-        break
-
-cap.release()
+	# grab the current frame and initialize the occupied/unoccupied
+	# text
+	frame = vs.read()
+	frame = frame if args.get("video", None) is None else frame[1]
+	text = "Unoccupied"
+	# if the frame could not be grabbed, then we have reached the end
+	# of the video
+	if frame is None:
+		break
+	# resize the frame, convert it to grayscale, and blur it
+	frame = imutils.resize(frame, width=500)
+	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+	gray = cv2.GaussianBlur(gray, (21, 21), 0)
+	# if the first frame is None, initialize it
+	if firstFrame is None:
+		firstFrame = gray
+		continue
+	# compute the absolute difference between the current frame and
+	# first frame
+	frameDelta = cv2.absdiff(firstFrame, gray)
+	thresh = cv2.threshold(frameDelta, 25, 255, cv2.THRESH_BINARY)[1]
+	# dilate the thresholded image to fill in holes, then find contours
+	# on thresholded image
+	thresh = cv2.dilate(thresh, None, iterations=2)
+	cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL,
+		cv2.CHAIN_APPROX_SIMPLE)
+	cnts = imutils.grab_contours(cnts)
+	# loop over the contours
+	for c in cnts:
+		# if the contour is too small, ignore it
+		if cv2.contourArea(c) < args["min_area"]:
+			continue
+		# compute the bounding box for the contour, draw it on the frame,
+		# and update the text
+		(x, y, w, h) = cv2.boundingRect(c)
+		cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+		text = "Occupied"
+# draw the text and timestamp on the frame
+	cv2.putText(frame, "Room Status: {}".format(text), (10, 20),
+		cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+	cv2.putText(frame, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"),
+		(10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
+	# show the frame and record if the user presses a key
+	cv2.imshow("Security Feed", frame)
+	cv2.imshow("Thresh", thresh)
+	cv2.imshow("Frame Delta", frameDelta)
+	key = cv2.waitKey(1) & 0xFF
+	# if the `q` key is pressed, break from the lop
+	if key == ord("q"):
+		break
+# cleanup the camera and close any open windows
+vs.stop() if args.get("video", None) is None else vs.release()
 cv2.destroyAllWindows()
