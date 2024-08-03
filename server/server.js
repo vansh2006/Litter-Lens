@@ -37,6 +37,7 @@ async function run() {
   }
 }
 
+
 run().catch(console.dir);
 
 //Get the url from the database
@@ -63,6 +64,11 @@ app.get('/video/:name', async (req, res) => {
 app.get('/', (req, res) => {
     res.send('Hello World!');
   });
+
+app.get('/getGarbageState', (req, res) => {
+  res.send(garbageState);
+});
+
 
 
 app.get('/setFull', (req, res) => {
