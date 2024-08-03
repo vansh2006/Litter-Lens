@@ -5,13 +5,12 @@ from imutils.video import VideoStream
 import time
 import cv2
 import os
-import requests 
+import sound
 
 # Now, we'll setup the AWS Kinesis Video Stream
 # Initialize the video source (webcam)
 video_source = None
 min_area = 1000
-
 
 # Take the camera and turn it on
 vs = VideoStream(src=1).start()
@@ -19,6 +18,7 @@ time.sleep(2.0)
 
 # Initialize the first frame in the video stream - used to compare for motion
 first_frame = None
+
 
 while True:
     # Initialize the "first frame" which is intended to be a blank frame
@@ -65,6 +65,8 @@ while True:
         (x, y, w, h) = cv2.boundingRect(c)
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
         text = "Trash in Frame"
+        #Play audio from sound.py
+        sound.play_random_soundtrack('audio')
 
     # Draw the text and timestamp on the frame
     cv2.putText(frame, "Litter Status: {}".format(text), (10, 20),
