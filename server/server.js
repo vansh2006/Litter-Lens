@@ -13,11 +13,13 @@ app.get('/', (req, res) => {
 
 app.get('/setFull', (req, res) => {
     garbageState = "FULL";
+    console.log('Garbage is now full');
     res.send('Garbage is now full');
   });
 
 app.get('/setEmpty', (req, res) => {
     garbageState = "EMPTY";
+    console.log('Garbage is now empty');
     res.send('Garbage is now empty');
   }
 );
