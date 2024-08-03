@@ -1,11 +1,22 @@
 import boto3
+import os
+from dotenv import load_dotenv
 import cv2
+
+load_dotenv()
 
 # create a stream name
 stream_name = 'litter-stream'
 
+aws_access_key_id = os.getenv('AWS_ACCESS_KEY')
+aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+aws_region = os.getenv('AWS_REGION')
+
 # create a kinesis video client
-kinesis = boto3.client('kinesisvideo', region_name='us-east-1')
+kinesis = boto3.client('kinesisvideo',
+    aws_access_key_id=aws_access_key_id,
+    aws_secret_access_key=aws_secret_access_key,
+    region_name=aws_region)
 
 endpoint = kinesis.get_data_endpoint(
     APIName='GET_HLS_STREAMING_SESSION_URL',
