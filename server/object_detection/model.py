@@ -1,31 +1,15 @@
-# import the necessary packages
-from imutils.video import VideoStream
-from awskinesisvideostreams import KinesisVideoStream
-from dotenv import load_dotenv
-from pymongo import MongoClient
-import datetime
-import imutils
-import time
-import cv2
 import boto3
 import os
+from dotenv import load_dotenv
+import cv2
+from pymongo import MongoClient
+import datetime
 
-"""AWS Content Begins Here"""
+load_dotenv()
 
-# Now, we'll setup the AWS Kinesis Video Stream
-# Initialize the video source (webcam)
-video_source = None
-min_area = 1000
+# create a stream name
+stream_name = 'litter-stream'
 
-# AWS Kinesis Video Stream setup
-stream_name = "litter-stream"
-
-# MongoDB Atlas setup
-mongo_client = MongoClient('mongodb+srv://kershanarulneswaran:bitterbens@littercluster.fg8lf.mongodb.net/?retryWrites=true&w=majority&appName=LitterCluster')
-db = mongo_client['litterdb']
-collection = db['streams']
-
-# Print to make sure
 aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
 aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
 aws_region = os.getenv('AWS_REGION')
@@ -33,73 +17,42 @@ print(f"AWS_ACCESS_KEY_ID: {aws_access_key_id}")
 print(f"AWS_SECRET_ACCESS_KEY: {aws_secret_access_key}")
 print(f"AWS_REGION: {aws_region}")
 
-# Create a Kinesis Video Client
-try:
-    kinesis = boto3.client(
-        'kinesisvideo',
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key,
-        region_name=aws_region
-    )
-    # Optionally, describe the stream to check the connection
-    response = kinesis.describe_stream(StreamName=stream_name)
-    print(f"Connected to Kinesis Video Stream: {response}")
-except Exception as e:
-    print(f"Error connecting to AWS Kinesis Video Stream: {e}")
-    exit(1)
+# create a kinesis video client
+kinesis = boto3.client('kinesisvideo',
+    aws_access_key_id=aws_access_key_id,
+    aws_secret_access_key=aws_secret_access_key,
+    region_name=aws_region)
 
-# Get the endpoint for PUT_MEDIA
-try:
-    response = kinesis.get_data_endpoint(
-        StreamName=stream_name,
-        APIName='PUT_MEDIA'
-    )
-    endpoint = response['DataEndpoint']
-    print(f"Data endpoint: {endpoint}")
-except Exception as e:
-    print(f"Error getting data endpoint: {e}")
-    exit(1)
-    
-# Create a Kinesis Video Stream
-try:
-	kinesis_video = kinesis.create_stream(
-		StreamName=stream_name,
-		MediaType='video/h264',
-		DataRetentionInHours=2
-	)
-	print(f"Kinesis Video Stream created: {kinesis_video}")
-except Exception as e:
-	print(f"Error creating Kinesis Video Stream: {e}")
-	exit(1)
-    
-# Store URL into MongoDB Atlas Database
-url = f"https://{endpoint}/{stream_name}"
+endpoint = kinesis.get_data_endpoint(
+    APIName='GET_HLS_STREAMING_SESSION_URL',
+    StreamName=stream_name
+)['DataEndpoint']
+
+# Get the Stream URL
+kvam = boto3.client('kinesis-video-archived-media', endpoint_url=endpoint, region_name=aws_region)
+# Get the HLS Stream URL from the GetMedia API
+url = kvam.get_hls_streaming_session_url(
+    StreamName=stream_name,
+    PlaybackMode='LIVE'
+)['HLSStreamingSessionURL']
+
+video = cv2.VideoCapture(url)
+
+#Store URL into MongoDB Atlas Database
+client = MongoClient('mongodb+srv://kershanarulneswaran:bitterbens@littercluster.fg8lf.mongodb.net/?retryWrites=true&w=majority&appName=LitterCluster')
+db = client['litterdb']
+collection = db['streams']
+
 document = {
-    'name': 'TrashTalk1',
+    'name': 'Trash1',
     'location': 'University of Toronto',
     'url': url,
 }
 
 # Add to MongoDB
-try:
-    collection.insert_one(document)
-    print('URL added to MongoDB')
-except Exception as e:
-    print(f"Error adding URL to MongoDB: {e}")
+collection.insert_one(document)
+print('URL added to MongoDB')
 
-# Take the camera and turn it on
-vs = VideoStream(src=1).start()
-time.sleep(2.0)
-
-# Initialize the first frame in the video stream - used to compare for motion
-first_frame = None
-
-
-""" Up till here is essentially just server streaming compatibility through AWS"""
-
-"""AWS Content Concludes Here"""
-
-# Now OBJECT DETECTION
 
 # Loop over the frames of the video
 while True:
@@ -160,7 +113,7 @@ while True:
 
     # Send frame to AWS Kinesis Video Stream
     try:
-        
+        print("sdfsdfsdfs")
     except Exception as e:
         print(f"Error sending frame to Kinesis Video Stream: {e}")
 

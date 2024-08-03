@@ -1,14 +1,13 @@
 # import the necessary packages
-from imutils.video import VideoStream
 import datetime
 import imutils
+from imutils.video import VideoStream
 import time
 import cv2
-import boto3
-
 import os
 
-"""AWS Content Begins Here"""
+
+
 
 # Now, we'll setup the AWS Kinesis Video Stream
 # Initialize the video source (webcam)
@@ -16,10 +15,8 @@ video_source = None
 min_area = 1000
 
 
-
-
 # Take the camera and turn it on
-vs = VideoStream(src=2).start()
+vs = VideoStream(src=1).start()
 time.sleep(2.0)
 
 # Initialize the first frame in the video stream - used to compare for motion
@@ -30,9 +27,11 @@ first_frame = None
 
 """AWS Content Concludes Here"""
 
-# Now OBJECT DETECTION
+# Now OBJECT DETECTIONg
 
 # Loop over the frames of the video
+
+
 while True:
     # Initialize the "first frame" which is intended to be a blank frame
     # There must be no objects right now
