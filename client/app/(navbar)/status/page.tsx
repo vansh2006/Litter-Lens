@@ -1,49 +1,38 @@
-"use client"; 
-import { useState } from 'react';
+"use client";
+import { useState, useEffect } from 'react';
 import styles from '../style.module.css';
 
 export default function Status() {
-  const [log, setLog] = useState('');
-  const [input, setInput] = useState('');
+  const [status, setStatus] = useState<string | null>(null);
 
-  const handleInputChange = (e) => {
-    setInput(e.target.value);
-  };
+  useEffect(() => {
+    const fetchStatus = async () => {
+      const response = await fetch('/api/status');
+      const data = await response.json();
+      setStatus(data.status);
+    };
 
-  const handleAddInputLog = () => {
-    setLog((prevLog) => (prevLog ? `${prevLog}\n${input}` : input));
-    setInput('');
-  };
+    // Fetch the status every second
+    const intervalId = setInterval(fetchStatus, 1000);
 
-  // FETCH STRING FROM SERVER HERE 
-  const fetchLog = async () => {
-    const response = await fetch('/api/log');
-    const data = await response.json();
-    setLog(data.log);
-  }
-
-  // FETCH VIDEO???
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
+  }, []);
 
   return (
     <div className={styles.bg}>
-    <div className={styles.container}>
-      <div className={styles.videoPlaceholder}>
-        <p>Video will be displayed here</p>
-      </div>
+      <div className={styles.container}>
+        <div className={styles.videoPlaceholder}>
+          <p>Video will be displayed here</p>
+        </div>
 
-      <div className={styles.scrollableSection}>
-        <h2>Trask Talk Log</h2>
-      
-        <button onClick={handleAddInputLog}>Add Log Entry</button>
-        <div className={styles.scrollableContainer}>
-          <ul>
-            {log.split('\n').map((entry, index) => (
-              <li key={index}>{entry}</li>
-            ))}
-          </ul>
+        <div className={styles.scrollableSection}>
+          <h2>Status</h2>
+          <div className={styles.scrollableContainer}>
+            <p>Status: {status !== null ? status : 'Waiting for data...'}</p>
+          </div>
         </div>
       </div>
     </div>
-    </div> 
   );
 }

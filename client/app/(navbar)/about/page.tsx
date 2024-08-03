@@ -1,6 +1,5 @@
 import styles from '../style.module.css';
 import logo from '../TrashTalkLogo.png'; 
-import demoImage 
 
 export default function About() {
   return <div className={styles.bg}>
