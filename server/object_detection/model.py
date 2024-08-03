@@ -1,15 +1,10 @@
 # import the necessary packages
 from imutils.video import VideoStream
-import argparse
 import datetime
 import imutils
 import time
 import cv2
-# construct the argument parser and parse the arguments
-# ap = argparse.ArgumentParser()
-# ap.add_argument("-v", "--video", help="path to the video file")
-# ap.add_argument("-a", "--min-area", type=int, default=500, help="minimum area size")
-# args = vars(ap.parse_args())
+
 # if the video argument is None, then we are reading from webcam
 video_source = None
 min_area = 500
@@ -46,7 +41,7 @@ while True:
 # compute the absolute difference between the current frame and
 	# first frame
 	frameDelta = cv2.absdiff(firstFrame, gray)
-	thresh = cv2.threshold(frameDelta, 25, 255, cv2.THRESH_BINARY)[1]
+	thresh = cv2.threshold(frameDelta, 60, 180, cv2.THRESH_BINARY)[1]
 	# dilate the thresholded image to fill in holes, then find contours
 	# on thresholded image
 	thresh = cv2.dilate(thresh, None, iterations=2)
