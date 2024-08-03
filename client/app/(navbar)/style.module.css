@@ -15,38 +15,55 @@
   flex-direction: column;
 }
 
+.bg {
+  background-color: background;
+  color: primaryColor;
+  padding: 0;
+  width: 100%;
+  height: 100vh;
+}
+
 .container {
   display: flex;
   flex-direction: row;
   width: 60%;
   margin: 20px auto;
-  margin-top: 0px; 
   border: 1px solid #ccc;
   padding: 20px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   background-color: darkPrimaryColor;
   color: primaryColor;
-  border-radius: 10px; 
+  border-radius: 10px;
 }
 
 .videoPlaceholder {
-    width: 50%; /* Adjust the width as needed */
-    height: 400px; /* Set a fixed height */
-    border-right: 1px solid #ccc;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background-color: #f0ede5;
-    border-radius: 10px;
-  }
-  
-.log {
+  flex: 1;
+  height: 400px;
+  border-right: 1px solid #ccc;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #f0ede5;
+  border-radius: 10px 0 0 10px;
+}
+
+.scrollableSection {
   flex: 1;
   padding: 20px;
   background-color: #f0ede5;
   border-radius: 0 10px 10px 0;
+}
+
+.scrollableContainer {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-top: 10px;
+  background-color: #f0ede5;
+  border-radius: 5px;
 }
 
 .log ul {
@@ -78,7 +95,7 @@
   margin-left: 0px;
   color: primaryColor;
   text-decoration: none;
-  margin-left: -75%; 
+  margin-left: -75%;
 }
 
 .menu {
@@ -120,68 +137,27 @@
   background-color: background;
   flex-direction: row;
   width: 70%;
-  margin: 10px auto; 
+  margin: 10px auto;
   font-size: 30px;
-  color: black; 
-}
-
-.bg {
-    background-color: background;
-    color: primaryColor;    
-    padding: 0px; 
-    width: 100%;
-    height: 100vh;
+  color: black;
 }
 
 .aboutDiv a {
-    text-decoration: none;
-    color: primaryColor;
-    flex-direction: row;
+  text-decoration: none;
+  color: primaryColor;
+  flex-direction: row;
 }
-
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center; 
-}
-
-.videoPlaceholder {
-  width: 640px;
-  height: 480px;
-  background-color: #ccc;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.scrollableSection {
-  width: 100%;
-  max-width: 640px;
-}
-
-.scrollableContainer {
-  max-height: 200px;
-  overflow-y: auto;
-  border: 1px solid #ccc;
-  padding: 10px;
-  margin-top: 10px;
-  background-color: #f0ede5;
-  border-radius: 5px; 
-}
-
 
 .logo {
-    width: 100px;
-    height: 100px;  
+  width: 100px;
+  height: 100px;
 }
 
-
 .imageBig {
-    width: 300px;
-    height: 300px;
-    align-items: center;
-    justify-content: center;
-    display: flex;
-    margin: 0 auto;
+  width: 300px;
+  height: 300px;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  margin: 0 auto;
 }
