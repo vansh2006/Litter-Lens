@@ -15,7 +15,7 @@ try:
                 print("FILLED!")
                 # SEnd post reuqest /setFull to server
                 url = serverIp + "/setFull"
-                x = requests.post(url)
+                x = requests.get(url)
 
                 if x.status_code == 200:
                     print("Successfully notified server.")
@@ -25,7 +25,7 @@ try:
 
             elif ("EMPTY" in line):
                 url = serverIp + "/setEmpty"
-                x = requests.post(url)
+                x = requests.get(url)
 
                 if x.status_code == 200:
                     print("Successfully notified server.")
