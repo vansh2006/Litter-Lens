@@ -10,6 +10,7 @@ app.get('/', (req, res) => {
 
 app.listen(port, () => console.log('Example app is listening on port 8000.'));
 
+//Following is code from MongoDB to connect to MongoDB
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = "mongodb+srv://kershanarulneswaran:bitterbens@littercluster.fg8lf.mongodb.net/?retryWrites=true&w=majority&appName=LitterCluster";
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -33,3 +34,16 @@ async function run() {
   }
 }
 run().catch(console.dir);
+
+//Use AWS to connect to MongoDB
+const AWS = require('aws-sdk');
+const fs = require('fs');
+
+//set region to us-east-1
+AWS.config.update({ region: 'us-east-1' });
+
+// S3 bucket 
+const s3 = new AWS.S3{
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+}
