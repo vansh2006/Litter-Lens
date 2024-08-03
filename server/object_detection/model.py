@@ -17,7 +17,6 @@ time.sleep(2.0)
 	#vs = cv2.VideoCapture(video_source)
 # initialize the first frame in the video stream
 firstFrame = None
-frame_count = 0
 # loop over the frames of the video
 while True:
 	# grab the current frame and initialize the occupied/unoccupied
@@ -36,14 +35,13 @@ while True:
 	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 	gray = cv2.GaussianBlur(gray, (21, 21), 0)
 	# if the first frame is None, initialize it
-	if firstFrame is None or frame_count % 30 == 0:
+	if firstFrame is None:
 		firstFrame = gray
 		continue
-	frame_count += 1
 # compute the absolute difference between the current frame and
 	# first frame
 	frameDelta = cv2.absdiff(firstFrame, gray)
-	thresh = cv2.threshold(frameDelta, 25, 255, cv2.THRESH_BINARY)[1]
+	thresh = cv2.threshold(frameDelta, 60, 180, cv2.THRESH_BINARY)[1]
 	# dilate the thresholded image to fill in holes, then find contours
 	# on thresholded image
 	thresh = cv2.dilate(thresh, None, iterations=2)
