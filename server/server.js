@@ -1,8 +1,11 @@
 const express = require('express');
 const app = express();
+const cors = require('cors');
 const port = process.env.PORT || 8000;
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
+
+app.use(cors());
 var garbageState = "EMPTY";
 
 //Server Init
@@ -66,10 +69,8 @@ app.get('/', (req, res) => {
   });
 
 app.get('/getGarbageState', (req, res) => {
-  res.send(garbageState);
+  res.json({"status": garbageState});
 });
-
-
 
 app.get('/setFull', (req, res) => {
     try{
