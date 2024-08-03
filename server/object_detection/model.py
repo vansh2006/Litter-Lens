@@ -13,8 +13,7 @@ min_area = 1000
 vs = VideoStream(src=1).start()
 time.sleep(2.0)
 # otherwise, we are reading from a video file
-#else:
-	#vs = cv2.VideoCapture(video_source)
+
 # initialize the first frame in the video stream
 firstFrame = None
 # loop over the frames of the video
@@ -41,10 +40,10 @@ while True:
 # compute the absolute difference between the current frame and
 	# first frame
 	frameDelta = cv2.absdiff(firstFrame, gray)
-	thresh = cv2.threshold(frameDelta, 60, 180, cv2.THRESH_BINARY)[1]
+	thresh = cv2.threshold(frameDelta, 55, 180, cv2.THRESH_BINARY)[1]
 	# dilate the thresholded image to fill in holes, then find contours
 	# on thresholded image
-	thresh = cv2.dilate(thresh, None, iterations=2)
+	thresh = cv2.dilate(thresh, None, iterations=4)
 	cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL,
 		cv2.CHAIN_APPROX_SIMPLE)
 	cnts = imutils.grab_contours(cnts)
