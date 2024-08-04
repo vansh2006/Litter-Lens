@@ -2,15 +2,16 @@ import serial
 import requests
 
 # Replace 'COM3' with the correct COM port for your Arduino
-ser = serial.Serial('COM4', 9600)
+ser = serial.Serial('COM3', 9600)
 
 serverIp = "http://localhost:8000"
 
 try:
+    print("Arduino connected!")
     while True:
         if ser.in_waiting > 0:  # Check if there's data available to read
             line = ser.readline().decode('utf-8').rstrip()  # Read a line and decode it
-            # print(line)  # Output the data to the console
+            #print(line)  # Output the data to the console
             if ("FILLED" in line):
                 print("FILLED!")
                 # SEnd post reuqest /setFull to server

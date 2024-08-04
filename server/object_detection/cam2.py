@@ -31,6 +31,11 @@ first_frame = None
 timer = 0
 frameCount = 0
 
+#Sound Flags
+sound_played = False
+last_played_time = 0
+sound_delay = 5 #seconds
+
 while True:
     frameCount += 1
     if frameCount % 600 == 0:
@@ -85,13 +90,15 @@ while True:
         text = "Trash in Frame"
         # Pay soudn effect
 
-        if timer > 4000: 
+        if timer > 4000 and not sound_played:
             timer = 0
-            
+            sound = random.choice(soundArray)
+            sound.play()
+            sound_played = True
+            last_played_time = time.time()
+
             # Send a request to the server
             try:
-                sound = random.choice(soundArray)
-                sound.play()
                 current_time = datetime.datetime.now()
                 print(f"Playing {sound} at {current_time}")
                 formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -109,6 +116,9 @@ while True:
                 continue
                 
         timer += 10
+    
+    if sound_played and (time.time() - last_played_time) > sound_delay:
+        sound_played = False
 
     # Draw the text and timestamp on the frame
     cv2.putText(frame, "Litter Status: {}".format(text), (10, 20),

@@ -3,8 +3,10 @@ const app = express();
 const bodyParser = require('body-parser');
 const moment = require('moment');
 const port = process.env.PORT || 8000;
+const CORS = require('cors');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
+app.use(CORS());
 app.use(bodyParser.json());
 var garbageState = "EMPTY";
 
