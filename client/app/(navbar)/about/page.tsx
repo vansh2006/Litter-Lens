@@ -6,7 +6,12 @@ export default function About() {
       <img className={styles.imageBig} src={logo.src} alt="logo" />
       <h1 className={styles.aboutTitle}>What's TrashTalk?</h1>
       <div className={styles.aboutDiv}>
-        The goal of this project is to alert pedestrians when they are littering and they miss the garbage can!!! This is unacceptable so we must remind them by sending customized messages! Reminding them to PICK UP AFTER THEIR TRASH!!!
+        Meet TrashTalk: The "gamified" garbage bin that talks trash when you shoot like trash! The premise 
+        of this bin is to alert pedestrians when they are littering and they miss the garbage can using our 
+        LitterLens technology. However, we understand that not everyone is a litterbug, so we have also added
+        some messages that reward you for getting rid of garbage on the streets. This is designed to 
+        reduce littering in public areas and residential properties, gamifying their recycling skils, 
+        without collecting an ounce of their personal data.
       </div>  
     </div>
     
