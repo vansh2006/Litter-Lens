@@ -29,11 +29,17 @@
   width: 80%;
   margin: 0px auto;
   border: 1px solid #ccc;
-  padding: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
   background-color: darkPrimaryColor;
   color: primaryColor;
-  border-radius: 10px;
+  border-radius: 15px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.08);
 }
 
 .videoPlaceholder {
@@ -73,7 +79,7 @@
   margin-top: 10px;
   background-color: #f0ede5;
   border-radius: 5px;
-  width: 480px;
+  width: 460px;
 }
 
 .log ul {
@@ -92,7 +98,7 @@
 .Titlebar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: space-evenly;
   padding: 20px;
   background-color: background;
   color: primaryColor;
@@ -100,7 +106,7 @@
 
 .title {
   font-size: 50px;
-  font-weight: 600;
+  font-weight: 900;
   justify-items: center;
   color: primaryColor;
   text-decoration: none;

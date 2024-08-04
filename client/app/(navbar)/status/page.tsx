@@ -5,11 +5,18 @@ import fetchGarbageState from '@/app/helper';
 
 export default function Status() {
   const [status, setStatus] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function fetchStatus() {
-    const data = await fetchGarbageState();
-    console.log(data.status); 
-    setStatus(data.status);
+    try {
+      const data = await fetchGarbageState();
+      console.log(data.status); 
+      setStatus(data.status);
+      setError(null); // Clear any previous errors
+    } catch (err) {
+      console.error('Error fetching status:', err);
+      setError('Failed to fetch status. Please try again later.');
+    }
   }
 
   useEffect(() => {
@@ -40,10 +47,9 @@ export default function Status() {
 
         <div className={styles.scrollableSection}>
           <div className={styles.topHalf}>
-            <h2>Status</h2>
-            <div className={styles.scrollableContainer}>
-              <p>{status !== null ? status : 'Waiting for data...'}</p>
-            </div>
+            <h2 className={styles.scrollableContainer}>
+              Bin Status: {status !== null ? status : 'Waiting for data...'}
+            </h2>
           </div>
           <div className={styles.bottomHalf}>
             <iframe
@@ -53,8 +59,8 @@ export default function Status() {
                 borderRadius: '2px',
                 boxShadow: '0 2px 10px 0 rgba(70, 76, 79, .2)'
               }}
-              width="480"
-              height="230"
+              width="460"
+              height="250"
               src="https://charts.mongodb.com/charts-litterlensdb-bzszzhc/embed/charts?id=66af3f58-986b-4c24-8132-f616d9e51b34&maxDataAge=3600&theme=light&autoRefresh=true">
             </iframe>
           </div> 
