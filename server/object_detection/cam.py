@@ -87,7 +87,6 @@ while True:
 
         if timer > 4000: 
             timer = 0; 
-            
             sound = random.choice(soundArray)
             sound.play()
 
@@ -102,7 +101,6 @@ while True:
     cv2.imshow("Security Feed", frame)
     cv2.imshow("Thresh", thresh)
     cv2.imshow("Frame Delta", frame_delta)
-
 
     key = cv2.waitKey(1) & 0xFF
     if key == ord("q"):
