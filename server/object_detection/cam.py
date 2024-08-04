@@ -20,9 +20,10 @@ for i in range(1, 10):
 # Initialize the video source (webcam)
 video_source = None
 min_area = 1000
+cv2.CAP_DSHOW = 700
 
 # Take the camera and turn it on
-vs = VideoStream(src=2).start()
+vs = VideoStream(src=1).start()
 time.sleep(2.0); 
 
 # Initialize the first frame in the video stream - used to compare for motion
