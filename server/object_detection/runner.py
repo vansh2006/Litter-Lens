@@ -15,9 +15,9 @@ def monitor_process(process, name):
     print(f"Error from {name}:", error)
 
 # Start both scripts in parallel
-process1 = run("python3 cam.py", "./")
-process2 = run("python3 cam2.py", "./")
-process3 = run("python3 arduinoComm.py", "./")
+process1 = run("python cam.py", "./")
+process2 = run("python cam2.py", "./")
+process3 = run("python arduinoComm.py", "./")
 
 # Create threads to monitor the processes
 thread1 = threading.Thread(target=monitor_process, args=(process1, "cam.py"))
