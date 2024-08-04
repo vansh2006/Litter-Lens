@@ -12,7 +12,7 @@ mixer.init()
 
 soundArray = []
 for i in range(1, 10):
-    soundArray.append(mixer.Sound(f'audio\\trashtalk{i}.wav'))
+    soundArray.append(mixer.Sound(f'audio\\nicetalk{i}.wav'))
 
 
 # Now, we'll setup the AWS Kinesis Video Stream
@@ -96,7 +96,7 @@ while True:
                 print(f"Playing {sound} at {current_time}")
                 formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
                 payload = {
-                    "trash_outside": True,
+                    "trash_outside": False,
                 }
 
                 response = requests.post('http://localhost:8000/detectTrash', json=payload)
