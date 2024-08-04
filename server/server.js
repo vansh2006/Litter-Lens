@@ -65,6 +65,12 @@ async function run() {
       res.status(500).send('Error detecting trash');
     }
   });
+} catch (err) {
+  console.error('Error connecting to MongoDB:', err);
+  setTimeout(() => run().catch(console.dir), 5000);
+}}
+run().catch(console.dir);
+
   
 
 app.get('/', (req, res) => {
@@ -94,9 +100,3 @@ app.get('/setEmpty', (req, res) => {
       console.error('Error setting garbage to empty:', err);
       res.status(500).send('Error setting garbage to empty');
     }});
-  } catch (err) {
-    console.error('Error connecting to MongoDB:', err);
-    setTimeout(() => run().catch(console.dir), 5000);
-  }
-}
-run().catch(console.dir);
