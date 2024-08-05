@@ -1,4 +1,5 @@
-# TrashTalk (HT6)
+# Litter Lens (formerly Trash Talk) (HT6)
+
 How many times have you been walking around the city and seen trash on the ground, sometimes just centimetres away from a trash can? It can be very frustrating to see people who either have no regard for littering, or just have horrible aim. This is what inspired us to create TrashTalk: trash talk for your trash shots.
 
 ## Getting Started (MVP)
