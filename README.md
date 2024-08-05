@@ -31,6 +31,8 @@ We learned so many things during this hackathon due to the varying experience le
 ## What's next for TrashTalk
 The next steps for TrashTalk would be to have more advanced analytics being run on each trash can. If we aim to reduce litter through the smart placement of trashcans along with auditory reminders, having a more accurate kit of sensors, such as GPS, weight sensor, etc. would allow us to have a much more accurate picture of the trash can's usage. The notification of a trash can being full could also be used to alert city workers to optimize their route and empty more popular trash cans first, increasing efficiency.
 
+https://devpost.com/software/trashtalk-c3wix9
+
 ## Getting Started (MVP)
 1. Clone the repository.
 2. Install node.js, express.js, opencv, pygame, pyserial, serial and requests if you don't have it installed yet.
